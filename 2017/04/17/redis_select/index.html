@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>redis 条件查询 | home</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="undefined" />
+  
+
+  <meta name="description" content="####### 问题假设有一user表存放在redis中，现要对这张user表进行条件查询，该怎么做？
+由于redis这类非关系型数据库是无法进行 select * from x where …..等操作的。
+那么该怎么实现这种查询需求呢？
+######## 方法一在redis中取出所有user进行遍历，将符合条件的进行筛选，最后得到结果。
+但感觉这种处理方法过于烦琐，数据量过大时性能可能会有影响">
+<meta property="og:type" content="article">
+<meta property="og:title" content="redis 条件查询">
+<meta property="og:url" content="http://yoursite.com/2017/04/17/redis_select/index.html">
+<meta property="og:site_name" content="home">
+<meta property="og:description" content="####### 问题假设有一user表存放在redis中，现要对这张user表进行条件查询，该怎么做？
+由于redis这类非关系型数据库是无法进行 select * from x where …..等操作的。
+那么该怎么实现这种查询需求呢？
+######## 方法一在redis中取出所有user进行遍历，将符合条件的进行筛选，最后得到结果。
+但感觉这种处理方法过于烦琐，数据量过大时性能可能会有影响">
+<meta property="og:updated_time" content="2017-04-17T08:15:13.075Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="redis 条件查询">
+<meta name="twitter:description" content="####### 问题假设有一user表存放在redis中，现要对这张user表进行条件查询，该怎么做？
+由于redis这类非关系型数据库是无法进行 select * from x where …..等操作的。
+那么该怎么实现这种查询需求呢？
+######## 方法一在redis中取出所有user进行遍历，将符合条件的进行筛选，最后得到结果。
+但感觉这种处理方法过于烦琐，数据量过大时性能可能会有影响">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=028c63b1" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-redis_select" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">redis 条件查询</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.04.17</span>
+      </span>
+
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://www.zuidushe.com/2017/04/17/redis_select/#disqus_thread"></a>
+        </span>
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>####### 问题<br>假设有一user表存放在redis中，现要对这张user表进行条件查询，该怎么做？</p>
+<p>由于redis这类非关系型数据库是无法进行 select * from x where …..等操作的。</p>
+<p>那么该怎么实现这种查询需求呢？</p>
+<p>######## 方法一<br>在redis中取出所有user进行遍历，将符合条件的进行筛选，最后得到结果。</p>
+<p>但感觉这种处理方法过于烦琐，数据量过大时性能可能会有影响，所以这并不是最优的方法。</p>
+<p>######## 方法二<br>在将user表中的数据存储到redis时，进行业务数据划分。</p>
+<p>假如要将性别进行划分，方便查询不同性别用户。例如用户为男的key为：<strong>USER_GENDER_M</strong>，女key的为：<strong>USER_GENDER_F</strong>。在将user数据存储到redis时，同时增加以下一步操作将男与女的userId分别add到不同的key中。</p>
+<p>若user是男的则</p>
+<pre><code>`Jedis.sadd(USER_GENDER_M,userId)`
+</code></pre><p>是女的则进行：</p>
+<p><code>Jedis.sadd(USER_GENDER_F,userId)</code></p>
+<p>通过以下查询就可以得到所有男性用户的userId：</p>
+<p><code>Jedis.smembers(USER_GENDER_M)</code></p>
+<p>最后通过以下查询就可以得到所有男性用户数据：</p>
+<pre><code>`Jedis.hmget(USER,user1Id,user2Id...)`
+</code></pre><p>若是有其它条件，也如此设计查询业务，例如某年龄阶段的，某区域的等等的用户。</p>
+<p>当查询的条件为：男性用户且年龄为20-30时，则先通过得到男性用户的id，然后得到年龄到20-30之间的用户id，最后通过取两者的交集(Jedis.sinter)就可得到符合这一条件的用户id，进而得到所要数据。</p>
+<p>若是or条件则取并集就行。</p>
+<p>#######小结</p>
+<p>到这，你会发现这些方法都是比较麻烦或无法达到要求的，这是由于这些非关系型数据库本身的设计所决定的，非关系型数据库并不适合各种条件或强关联查询。所以进行强关系条件查询的还是使用关系型数据库进行操作。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫</div>
+        <ul class="theme.donation.items.length">
+        
+          <li class="item">
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://yoursite.com/2017/04/17/redis_select/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
