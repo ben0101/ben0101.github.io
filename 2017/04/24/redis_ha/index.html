@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>redis 高可用（HA）集群方案 | home</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="undefined" />
+  
+
+  <meta name="description" content="#######redis的高可用方案，3.0之前使用哨兵模式，但当主机挂机，进行主从切换时，会有1到2秒数据的丢失。
+解决方法：当抛出cluster is down时，在 catch中（若要延迟则设置睡眠时间）再执行一次try中的操作，这可让从机成功接替主机后再进行这1到2秒内进行的数据处理，达到数据不丢失。
+这并不是最优的方法。然而，3.0后的集群。可解决上面数据丢失问题
+下面先进行集群的搭建。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="redis 高可用（HA）集群方案">
+<meta property="og:url" content="http://yoursite.com/2017/04/24/redis_ha/index.html">
+<meta property="og:site_name" content="home">
+<meta property="og:description" content="#######redis的高可用方案，3.0之前使用哨兵模式，但当主机挂机，进行主从切换时，会有1到2秒数据的丢失。
+解决方法：当抛出cluster is down时，在 catch中（若要延迟则设置睡眠时间）再执行一次try中的操作，这可让从机成功接替主机后再进行这1到2秒内进行的数据处理，达到数据不丢失。
+这并不是最优的方法。然而，3.0后的集群。可解决上面数据丢失问题
+下面先进行集群的搭建。">
+<meta property="og:image" content="https://static.oschina.net/uploads/space/2017/0423/234336_c1D0_1448523.png">
+<meta property="og:image" content="https://static.oschina.net/uploads/space/2017/0424/000140_PhFW_1448523.png">
+<meta property="og:image" content="https://static.oschina.net/uploads/space/2017/0424/000158_UEWl_1448523.png">
+<meta property="og:updated_time" content="2017-04-23T16:55:06.730Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="redis 高可用（HA）集群方案">
+<meta name="twitter:description" content="#######redis的高可用方案，3.0之前使用哨兵模式，但当主机挂机，进行主从切换时，会有1到2秒数据的丢失。
+解决方法：当抛出cluster is down时，在 catch中（若要延迟则设置睡眠时间）再执行一次try中的操作，这可让从机成功接替主机后再进行这1到2秒内进行的数据处理，达到数据不丢失。
+这并不是最优的方法。然而，3.0后的集群。可解决上面数据丢失问题
+下面先进行集群的搭建。">
+<meta name="twitter:image" content="https://static.oschina.net/uploads/space/2017/0423/234336_c1D0_1448523.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=028c63b1" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-redis_ha" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">redis 高可用（HA）集群方案</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.04.24</span>
+      </span>
+
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://www.zuidushe.com/2017/04/24/redis_ha/#disqus_thread"></a>
+        </span>
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>#######<br>redis的高可用方案，3.0之前使用哨兵模式，但当主机挂机，进行主从切换时，会有1到2秒数据的丢失。</p>
+<p>解决方法：当抛出cluster is down时，在 catch中（若要延迟则设置睡眠时间）再执行一次try中的操作，这可让从机成功接替主机后再进行这1到2秒内进行的数据处理，达到数据不丢失。</p>
+<p>这并不是最优的方法。然而，3.0后的集群。可解决上面数据丢失问题</p>
+<p>下面先进行集群的搭建。</p>
+<p>集群搭建方案：</p>
+<p>在3台centos虚拟机上分别安装一主一从的redis，并实现集群功能（集群至少3个主节点，3个从节点）。</p>
+<p>安装redis过程：</p>
+<p>下载redis.</p>
+<p>解压到/usr/local  :   tar -zxvf redis-3.2.8 -C /usr/local</p>
+<p>进行解压后redis目录redis-3.2.8 编译：make </p>
+<p>进入redis-3.2.8/src安装：make install</p>
+<p>(centos系统编译需要安装 gcc tcl)</p>
+<p>建立cluster文件夹：mkdir -p /usr/local/redis-cluster</p>
+<p>在cluster中建立2个目录 8001(备注：放置主机)  8002(备注：放置从机)</p>
+<p>将redis-conf分别copy到这两个文件中，并进行修改 需要修改如下：</p>
+<p>1，修改 绑定本机IP</p>
+<p>bind 192.168.48.130</p>
+<p>2 修改 端口号</p>
+<p>port 8001</p>
+<p>3 修改 指定数据存放目录</p>
+<p>dir /usr/local/redis-cluster/8001/</p>
+<p>4 修改 开启 aof</p>
+<p>appendonly yes</p>
+<p>5 修改 开启集群</p>
+<p> cluster-enabled yes</p>
+<p>6 修改 节点配置名称</p>
+<p> cluster-config-file nodes-8001.conf</p>
+<p>7 修改 timeout</p>
+<p> cluster-node-timeout 15000</p>
+<p>#####安装启动集群脚本<br><code>yum install ruby</code></p>
+<p><code>yum install rubygems</code></p>
+<p><code>gem install redis</code></p>
+<p>将以上安装操作重复，安装在三台不同的虚拟机上。</p>
+<p>#####最后启动集群操作（在其中一台虚拟机上启动即可）：</p>
+<pre><code>`cd /usr/local/redis-3.2.8/src`
+
+`./redis-trib.rb create --replicas 1 192.168.48.133:8001 192.168.48.132:8001 192.168.48.130:8001 192.168.48.133:8002 192.168.48.132:8002 192.168.48.130:8002`
+</code></pre><p><img src="https://static.oschina.net/uploads/space/2017/0423/234336_c1D0_1448523.png" alt=""></p>
+<p>#####说明：<br>–replicas后面的 1 ，这个数字指主从比例 ，3主3从所以为1，后面跟着的host，按顺序  前三台为主，后三台为从，第一台主对应第四台从。</p>
+<p>#####简单测试：<br><img src="https://static.oschina.net/uploads/space/2017/0424/000140_PhFW_1448523.png" alt=""></p>
+<p><img src="https://static.oschina.net/uploads/space/2017/0424/000158_UEWl_1448523.png" alt=""></p>
+<p>######哨兵模式的主从数据是一样的，而集群模式数据是分布在不同机器不同的slot上。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫</div>
+        <ul class="theme.donation.items.length">
+        
+          <li class="item">
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://yoursite.com/2017/04/24/redis_ha/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
