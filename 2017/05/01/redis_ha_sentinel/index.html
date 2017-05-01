@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>redis HA 之 Redis-Sentinel | home</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="undefined" />
+  
+
+  <meta name="description" content="#######上次测试redis的HA方案是采用了Redis-Cluster（集群）的方式。然那一套方案比较适合大数据量的应用架构，对于实际中那种非大数据量的应用架构有点大炮打蚊子的赶脚。所以这次采用另一种HA方案，比较适合那种小型应用架构，那就是Redis-Sentinel(哨兵).具体请翻阅Redis Sentinel Documentation
+######## 环境centos 6
+192">
+<meta property="og:type" content="article">
+<meta property="og:title" content="redis HA 之 Redis-Sentinel">
+<meta property="og:url" content="http://yoursite.com/2017/05/01/redis_ha_sentinel/index.html">
+<meta property="og:site_name" content="home">
+<meta property="og:description" content="#######上次测试redis的HA方案是采用了Redis-Cluster（集群）的方式。然那一套方案比较适合大数据量的应用架构，对于实际中那种非大数据量的应用架构有点大炮打蚊子的赶脚。所以这次采用另一种HA方案，比较适合那种小型应用架构，那就是Redis-Sentinel(哨兵).具体请翻阅Redis Sentinel Documentation
+######## 环境centos 6
+192">
+<meta property="og:image" content="http://thumbnail0.baidupcs.com/thumbnail/c3fdeecb13a58a51f93240f1d464b436?fid=2687665673-250528-786768579277898&time=1493647200&rt=sh&sign=FDTAER-DCb740ccc5511e5e8fedcff06b081203-C4f%2FJfRlcp6qsrQJfxJkseWV%2FGA%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=2804445179044663000&dp-callid=0&size=c710_u400&quality=100">
+<meta property="og:image" content="http://thumbnail0.baidupcs.com/thumbnail/f9d943945f081357a189e2539d00d85a?fid=2687665673-250528-1119144124034768&time=1493647200&rt=sh&sign=FDTAER-DCb740ccc5511e5e8fedcff06b081203-uBnhRTEXvLjdb9QQKGjz1QRS%2BaQ%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=2804460159988792952&dp-callid=0&size=c710_u400&quality=100">
+<meta property="og:image" content="http://thumbnail0.baidupcs.com/thumbnail/ecdb82df704ab828ce89ed4ecfc206f9?fid=2687665673-250528-475129305081670&time=1493647200&rt=sh&sign=FDTAER-DCb740ccc5511e5e8fedcff06b081203-JbhK5ctYQ3V7%2BJvtOhN30h6ZhQs%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=2804466635971649144&dp-callid=0&size=c710_u400&quality=100">
+<meta property="og:image" content="http://thumbnail0.baidupcs.com/thumbnail/4ea9628cafa8582b0d193fdb5a6556d6?fid=2687665673-250528-869579725136665&time=1493647200&rt=sh&sign=FDTAER-DCb740ccc5511e5e8fedcff06b081203-zxQTVCXEQ%2FC7K0e%2F3ejLSoPHf1k%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=2804471825594946358&dp-callid=0&size=c710_u400&quality=100">
+<meta property="og:image" content="http://thumbnail0.baidupcs.com/thumbnail/6c149edef54f492bbb054066cb32b10f?fid=2687665673-250528-723234143949091&time=1493647200&rt=sh&sign=FDTAER-DCb740ccc5511e5e8fedcff06b081203-6aKQ2UEbLpkNDhBKkN47pp5Kk4g%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=2804487243995984037&dp-callid=0&size=c710_u400&quality=100">
+<meta property="og:updated_time" content="2017-05-01T14:12:48.483Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="redis HA 之 Redis-Sentinel">
+<meta name="twitter:description" content="#######上次测试redis的HA方案是采用了Redis-Cluster（集群）的方式。然那一套方案比较适合大数据量的应用架构，对于实际中那种非大数据量的应用架构有点大炮打蚊子的赶脚。所以这次采用另一种HA方案，比较适合那种小型应用架构，那就是Redis-Sentinel(哨兵).具体请翻阅Redis Sentinel Documentation
+######## 环境centos 6
+192">
+<meta name="twitter:image" content="http://thumbnail0.baidupcs.com/thumbnail/c3fdeecb13a58a51f93240f1d464b436?fid=2687665673-250528-786768579277898&time=1493647200&rt=sh&sign=FDTAER-DCb740ccc5511e5e8fedcff06b081203-C4f%2FJfRlcp6qsrQJfxJkseWV%2FGA%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=2804445179044663000&dp-callid=0&size=c710_u400&quality=100">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=028c63b1" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-5"><a class="toc-link" href="#只有我们独立自主的思索，才真正具有真理与生命——叔本华"><span class="toc-text">只有我们独立自主的思索，才真正具有真理与生命——叔本华</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-redis_ha_sentinel" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">redis HA 之 Redis-Sentinel</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.05.01</span>
+      </span>
+
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://www.zuidushe.com/2017/05/01/redis_ha_sentinel/#disqus_thread"></a>
+        </span>
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>#######<br>上次测试redis的HA方案是采用了Redis-Cluster（集群）的方式。然那一套方案比较适合大数据量的应用架构，对于实际中那种非大数据量的应用架构有点大炮打蚊子的赶脚。所以这次采用另一种HA方案，比较适合那种小型应用架构，那就是Redis-Sentinel(哨兵).具体请翻阅<a href="https://redis.io/topics/sentinel" title="Redis Sentinel Documentation" target="_blank" rel="external">Redis Sentinel Documentation</a></p>
+<p>######## 环境<br>centos 6</p>
+<p>192.168.48.130：7000 Master</p>
+<p>192.168.48.130：7001 Slave</p>
+<p>192.168.48.130：26379 Sentinel_1</p>
+<p>192.168.48.130：26380 Sentinel_2</p>
+<p>192.168.48.130：26381 Sentinel_3</p>
+<p>######## 步骤<br>实际中应该是将Master,Slave,Sentinel_1,Sentinel_2,Sentinel_3安装在不同的机器上，由于我的机器配置不高，跑不起这么多个vm,所以将以上全部安装在一台机器中(配置不同的启动文件即可)作测试使用。</p>
+<p>①将redis安装，略（上一篇文件涉及）</p>
+<p>②在/usr/local/下建立以下文件</p>
+<p>redis-sentinel/master</p>
+<p>redis-sentinel/slave</p>
+<p>redis-sentinel/sentinel_1</p>
+<p>redis-sentinel/sentinel_2</p>
+<p>redis-sentinel/sentinel_3</p>
+<p>③将redis安装目录中的redis.conf移动到以上文件master,salve目录下并进行修改。<br>master中的redis.conf可使用默认（本人的修改了端口及数据储存目录）<br>slave中的redis.conf要配置slaveof 实现备份 </p>
+<pre><code>`在配置文件 #slaveof &lt;masterip&gt; &lt;masterport&gt;下面指定master ip及端口`
+`slaveof 192.168.48.130 7000`
+</code></pre><p>④分别启动master，slave<br>    <code>redis-server /usr/local/redis-sentinel/master(or slave)/redis.conf</code><br>查看master及slave的启动状态：</p>
+<p>⑤将redis安装目录下的sentinel.conf分别复制到上面新的sentinel_1，sentinel_2，sentinel_3目录，并修改。主要修改以下指定监控的master,同时指定一个日志目录,注意由于在同一台机器，此配置文件中port及dir要修改成不同的，其它的一样。</p>
+<pre><code>`sentinel monitor mymaster 192.168.48.130 7000`
+
+`daemonize yes `
+#目录需存在
+`logfile &quot;/usr/local/redis-sentinel/sentinel_1/log/sentinel.log&quot;`
+</code></pre><p>⑥启动sentinel,查看日志</p>
+<p><img src="http://thumbnail0.baidupcs.com/thumbnail/c3fdeecb13a58a51f93240f1d464b436?fid=2687665673-250528-786768579277898&amp;time=1493647200&amp;rt=sh&amp;sign=FDTAER-DCb740ccc5511e5e8fedcff06b081203-C4f%2FJfRlcp6qsrQJfxJkseWV%2FGA%3D&amp;expires=8h&amp;chkv=0&amp;chkbd=0&amp;chkpc=&amp;dp-logid=2804445179044663000&amp;dp-callid=0&amp;size=c710_u400&amp;quality=100" alt=""></p>
+<p>⑦测试主从故障转移</p>
+<p><img src="http://thumbnail0.baidupcs.com/thumbnail/f9d943945f081357a189e2539d00d85a?fid=2687665673-250528-1119144124034768&amp;time=1493647200&amp;rt=sh&amp;sign=FDTAER-DCb740ccc5511e5e8fedcff06b081203-uBnhRTEXvLjdb9QQKGjz1QRS%2BaQ%3D&amp;expires=8h&amp;chkv=0&amp;chkbd=0&amp;chkpc=&amp;dp-logid=2804460159988792952&amp;dp-callid=0&amp;size=c710_u400&amp;quality=100" alt=""></p>
+<p><img src="http://thumbnail0.baidupcs.com/thumbnail/ecdb82df704ab828ce89ed4ecfc206f9?fid=2687665673-250528-475129305081670&amp;time=1493647200&amp;rt=sh&amp;sign=FDTAER-DCb740ccc5511e5e8fedcff06b081203-JbhK5ctYQ3V7%2BJvtOhN30h6ZhQs%3D&amp;expires=8h&amp;chkv=0&amp;chkbd=0&amp;chkpc=&amp;dp-logid=2804466635971649144&amp;dp-callid=0&amp;size=c710_u400&amp;quality=100" alt=""></p>
+<p><img src="http://thumbnail0.baidupcs.com/thumbnail/4ea9628cafa8582b0d193fdb5a6556d6?fid=2687665673-250528-869579725136665&amp;time=1493647200&amp;rt=sh&amp;sign=FDTAER-DCb740ccc5511e5e8fedcff06b081203-zxQTVCXEQ%2FC7K0e%2F3ejLSoPHf1k%3D&amp;expires=8h&amp;chkv=0&amp;chkbd=0&amp;chkpc=&amp;dp-logid=2804471825594946358&amp;dp-callid=0&amp;size=c710_u400&amp;quality=100" alt=""></p>
+<p><img src="http://thumbnail0.baidupcs.com/thumbnail/6c149edef54f492bbb054066cb32b10f?fid=2687665673-250528-723234143949091&amp;time=1493647200&amp;rt=sh&amp;sign=FDTAER-DCb740ccc5511e5e8fedcff06b081203-6aKQ2UEbLpkNDhBKkN47pp5Kk4g%3D&amp;expires=8h&amp;chkv=0&amp;chkbd=0&amp;chkpc=&amp;dp-logid=2804487243995984037&amp;dp-callid=0&amp;size=c710_u400&amp;quality=100" alt=""></p>
+<p>######备注：</p>
+<p>redis.conf中若有配置<br>protected-mode yes<br>bind 192.168.48.130</p>
+<p>则sentinel.conf中也须要配置上<br>protected-mode yes<br>bind 192.168.48.130</p>
+<p>这个坑让我搞了几个小时，一直不能故障转移。。。</p>
+<h5 id="只有我们独立自主的思索，才真正具有真理与生命——叔本华"><a href="#只有我们独立自主的思索，才真正具有真理与生命——叔本华" class="headerlink" title="只有我们独立自主的思索，才真正具有真理与生命——叔本华"></a>只有我们独立自主的思索，才真正具有真理与生命——叔本华</h5><p> 22:12 sz</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫</div>
+        <ul class="theme.donation.items.length">
+        
+          <li class="item">
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://yoursite.com/2017/05/01/redis_ha_sentinel/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
