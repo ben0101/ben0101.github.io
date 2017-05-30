@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>系统中图片上传设计方案 | home</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="undefined" />
+  
+
+  <meta name="description" content="曾做过一些系统，对于图片上传的相关设计有些疑惑，经过后续的各方面研究，现有了能去除心中困惑的解决方案。
+#####先说说以前做系统时遇到的设计问题：
+有业务对象A，A中有各种属性，这其中包括附加图片的属性，而A可以关联多张图片。当要新增一个对象A时，怎么保存这些图片信息呢？
+#####当初想到了两个方案：
+①在点击保存时，将对象A的全部属性上传，这包括所有图片,然后在后台将所有图片整理后，将对应地">
+<meta property="og:type" content="article">
+<meta property="og:title" content="系统中图片上传设计方案">
+<meta property="og:url" content="http://yoursite.com/2017/05/30/系统中图片上传设计方案/index.html">
+<meta property="og:site_name" content="home">
+<meta property="og:description" content="曾做过一些系统，对于图片上传的相关设计有些疑惑，经过后续的各方面研究，现有了能去除心中困惑的解决方案。
+#####先说说以前做系统时遇到的设计问题：
+有业务对象A，A中有各种属性，这其中包括附加图片的属性，而A可以关联多张图片。当要新增一个对象A时，怎么保存这些图片信息呢？
+#####当初想到了两个方案：
+①在点击保存时，将对象A的全部属性上传，这包括所有图片,然后在后台将所有图片整理后，将对应地">
+<meta property="og:updated_time" content="2017-05-30T08:01:02.370Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="系统中图片上传设计方案">
+<meta name="twitter:description" content="曾做过一些系统，对于图片上传的相关设计有些疑惑，经过后续的各方面研究，现有了能去除心中困惑的解决方案。
+#####先说说以前做系统时遇到的设计问题：
+有业务对象A，A中有各种属性，这其中包括附加图片的属性，而A可以关联多张图片。当要新增一个对象A时，怎么保存这些图片信息呢？
+#####当初想到了两个方案：
+①在点击保存时，将对象A的全部属性上传，这包括所有图片,然后在后台将所有图片整理后，将对应地">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=028c63b1" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-系统中图片上传设计方案" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">系统中图片上传设计方案</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.05.30</span>
+      </span>
+
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://www.zuidushe.com/2017/05/30/系统中图片上传设计方案/#disqus_thread"></a>
+        </span>
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>曾做过一些系统，对于图片上传的相关设计有些疑惑，经过后续的各方面研究，现有了能去除心中困惑的解决方案。</p>
+<p>#####先说说以前做系统时遇到的设计问题：</p>
+<p>有业务对象A，A中有各种属性，这其中包括附加图片的属性，而A可以关联多张图片。当要新增一个对象A时，怎么保存这些图片信息呢？</p>
+<p>#####当初想到了两个方案：</p>
+<p>①在点击保存时，将对象A的全部属性上传，这包括所有图片,然后在后台将所有图片整理后，将对应地址赋值给对象A，最后保存对象A。</p>
+<p>②每选择一张图片时，会先上传到服务器，然后返回相关图片地址给前端页面对象，当点击保存时，页面传递的就是对象A所有的属性，此时关联的是图片在服务器的地址，此步骤并没有上传图片。</p>
+<p>#####对于这两种种保存，可能会有失败情况，怎么解决数据的一致性问题？</p>
+<p>对于①由于不可能使用事务来确保数据的一致，那么只能使用try catch ,在抛出异常时，进行手动删除相关的图片。对于②同理，在保存对象失败时，根据上传的图片地址进行删除相关数据，但其实还是不能做到100%的确保，比如中途断电情况，这些情况是忽略的，我们能做到的就是尽最大可能做到数据的一致性。</p>
+<p>#####孰优孰劣</p>
+<p>其实都不优，两种方案处理数据一致性这个问题上并不好，而且①这种方案可能会存在并发问题。so…我想到了 定时任务 这种方案能解决数据一致性问题。最终方案是在②的基础上增加定时任务，但怎么设计呢？请听吾慢慢分解：</p>
+<p>①首先是数据库表的设计：图片对应的表，这里叫image表吧，这个表除了记录图片的一些基本信息，还要增加一个过期时间的字段expired_time，用来记录图片过期的时间。</p>
+<p>②在新增一个业务对象A时，每选择一张图片,都会先上传到服务器，然后返回关联的图片对象信息（可以是保存的此条image记录,用于显示到页面，在保存业务对象A时，保存与图片的关联关系）。此过程会保存图片相关基本信息，对于expired_time这个字段的值为当前时间（new Date()）。</p>
+<p>③在业务对象A保存成功后，注意：需要更新关联的image记录 ，将expired_time设置为空。这两个动作使用事务，若保存失败，则expired_time不为空。</p>
+<p>④下面就是开始定时任务了，定时任务在凌晨将过期时间不为空的记录清空，同时删除上传的文件。</p>
+<p>到这，以上方案基本很好地解决了图片上传的一些相关问题。enjoy it !</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫</div>
+        <ul class="theme.donation.items.length">
+        
+          <li class="item">
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://yoursite.com/2017/05/30/系统中图片上传设计方案/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
