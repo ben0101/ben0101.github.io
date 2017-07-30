@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>cas 认证流程分析 | home</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="undefined" />
+  
+
+  <meta name="description" content="####CAS主要分为两部分
+#####CAS Server端:需单独部署（作统一的认证处理中心），负责用户校验认证功能，认证方式可从XML中检索或从数据库中检索数据进行认证。
+#####CAS Client端：与web应用整合，负责保护web资源，当有请求访问web受保护资源时，将请求重定向到CAS Server端进行用户认证 。
+用户请求web应用，cas-client-core中的Authe">
+<meta property="og:type" content="article">
+<meta property="og:title" content="cas 认证流程分析">
+<meta property="og:url" content="http://yoursite.com/2017/07/30/cas认证流程/index.html">
+<meta property="og:site_name" content="home">
+<meta property="og:description" content="####CAS主要分为两部分
+#####CAS Server端:需单独部署（作统一的认证处理中心），负责用户校验认证功能，认证方式可从XML中检索或从数据库中检索数据进行认证。
+#####CAS Client端：与web应用整合，负责保护web资源，当有请求访问web受保护资源时，将请求重定向到CAS Server端进行用户认证 。
+用户请求web应用，cas-client-core中的Authe">
+<meta property="og:image" content="https://static.oschina.net/uploads/space/2017/0723/110431_NL7M_1448523.png">
+<meta property="og:image" content="https://static.oschina.net/uploads/space/2017/0723/110509_SXtV_1448523.png">
+<meta property="og:image" content="https://static.oschina.net/uploads/space/2017/0723/112242_IucK_1448523.png">
+<meta property="og:updated_time" content="2017-07-30T01:13:20.791Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="cas 认证流程分析">
+<meta name="twitter:description" content="####CAS主要分为两部分
+#####CAS Server端:需单独部署（作统一的认证处理中心），负责用户校验认证功能，认证方式可从XML中检索或从数据库中检索数据进行认证。
+#####CAS Client端：与web应用整合，负责保护web资源，当有请求访问web受保护资源时，将请求重定向到CAS Server端进行用户认证 。
+用户请求web应用，cas-client-core中的Authe">
+<meta name="twitter:image" content="https://static.oschina.net/uploads/space/2017/0723/110431_NL7M_1448523.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=028c63b1" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-cas认证流程" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">cas 认证流程分析</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.07.30</span>
+      </span>
+
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://www.zuidushe.com/2017/07/30/cas认证流程/#disqus_thread"></a>
+        </span>
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>####CAS主要分为两部分</p>
+<p>#####CAS Server端:<br>需单独部署（作统一的认证处理中心），负责用户校验认证功能，认证方式可从XML中检索或从数据库中检索数据进行认证。</p>
+<p>#####CAS Client端：<br>与web应用整合，负责保护web资源，当有请求访问web受保护资源时，将请求重定向到CAS Server端进行用户认证 。</p>
+<p>用户请求web应用，cas-client-core中的AuthenticationFilter会拦截请求，doFilter方法根据是否有登录过而决定是否要重定向。</p>
+<pre><code>`public final void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+HttpServletRequest request = (HttpServletRequest)servletRequest;
+HttpServletResponse response = (HttpServletResponse)servletResponse;
+HttpSession session = request.getSession(false);
+Assertion assertion = session != null?(Assertion)session.getAttribute(&quot;_const_cas_assertion_&quot;):null;
+if(assertion != null) {
+    filterChain.doFilter(request, response);
+} else {
+    String serviceUrl = this.constructServiceUrl(request, response);
+    String ticket = CommonUtils.safeGetParameter(request, this.getArtifactParameterName());
+    boolean wasGatewayed = this.gatewayStorage.hasGatewayedAlready(request, serviceUrl);
+    if(!CommonUtils.isNotBlank(ticket) &amp;&amp; !wasGatewayed) {
+        this.log.debug(&quot;no ticket and no assertion found&quot;);
+        String modifiedServiceUrl;
+        if(this.gateway) {
+            this.log.debug(&quot;setting gateway attribute in session&quot;);
+            modifiedServiceUrl = this.gatewayStorage.storeGatewayInformation(request, serviceUrl);
+        } else {
+            modifiedServiceUrl = serviceUrl;
+        }
+
+        if(this.log.isDebugEnabled()) {
+            this.log.debug(&quot;Constructed service url: &quot; + modifiedServiceUrl);
+        }
+
+        String urlToRedirectTo = CommonUtils.constructRedirectUrl(this.casServerLoginUrl, this.getServiceParameterName(), modifiedServiceUrl, this.renew, this.gateway);
+        if(this.log.isDebugEnabled()) {
+            this.log.debug(&quot;redirecting to \&quot;&quot; + urlToRedirectTo + &quot;\&quot;&quot;);
+        }
+
+        response.sendRedirect(urlToRedirectTo);
+    } else {
+        filterChain.doFilter(request, response);
+    }
+}
+</code></pre><p>若是首次登录，则会重定向到Cas Server端。Cas Server端的验证配置主要在deployerConfigContext.xml中。</p>
+<pre><code>`&lt;!-- 设置密码的加密方式，这里使用的是MD5加密 --&gt;
+&lt;bean id=&quot;passwordEncoder&quot;
+  class=&quot;org.jasig.cas.authentication.handler.DefaultPasswordEncoder&quot;
+  c:encodingAlgorithm=&quot;MD5&quot;
+  p:characterEncoding=&quot;UTF-8&quot; /&gt;`
+
+`&lt;!-- 通过数据库验证身份，自定义 --&gt;
+&lt;bean id=&quot;primaryAuthenticationHandler&quot;
+  class=&quot;com.cas.jdbc.QueryDatabaseAuthenticationHandler&quot;
+  p:dataSource-ref=&quot;dataSource&quot;
+  p:passwordEncoder-ref=&quot;passwordEncoder&quot;
+  p:sql=&quot;select password from t_user where account=? and status = &apos;active&apos;&quot; /&gt;`
+
+`&lt;!-- 设置数据源 --&gt;
+ &lt;bean id=&quot;dataSource&quot; class=&quot;org.springframework.jdbc.datasource.DriverManagerDataSource&quot;&gt;
+      &lt;property name=&quot;driverClassName&quot; value=&quot;com.mysql.jdbc.Driver&quot;&gt;&lt;/property&gt;
+      &lt;property name=&quot;url&quot; value=&quot;jdbc:mysql://127.0.0.1:3306/cas?useUnicode=true&amp;amp;characterEncoding=utf8&quot;&gt;&lt;/property&gt;
+      &lt;property name=&quot;username&quot; value=&quot;root&quot;&gt;&lt;/property&gt;
+      &lt;property name=&quot;password&quot; value=&quot;root&quot;&gt;&lt;/property&gt;
+&lt;/bean&gt;`
+</code></pre><p>####登录认证过程：</p>
+<p>用户输入登录资料后，提交至Cas Server端后，Cas Server端会返回一个ticket,及将TGC写入到Cookie中</p>
+<p><img src="https://static.oschina.net/uploads/space/2017/0723/110431_NL7M_1448523.png" alt=""></p>
+<p>浏览器得到ticket后，向Cas Client发起请求(带上ticket)，Cas Client端再向Cas Server端请求认证ticket</p>
+<p><img src="https://static.oschina.net/uploads/space/2017/0723/110509_SXtV_1448523.png" alt=""></p>
+<p>认证通过后，则Cas Client 端跳转成功页面。</p>
+<p>附一张网上找的流程图：</p>
+<p><img src="https://static.oschina.net/uploads/space/2017/0723/112242_IucK_1448523.png" alt=""></p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫</div>
+        <ul class="theme.donation.items.length">
+        
+          <li class="item">
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://yoursite.com/2017/07/30/cas认证流程/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
